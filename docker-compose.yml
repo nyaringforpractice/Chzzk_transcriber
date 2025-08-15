@@ -1,0 +1,39 @@
+services:
+  recorder:
+    build: .
+    image: callisto-stt:latest
+    container_name: callisto-recorder
+    command: ["/app/entrypoint_recorder.sh"]
+    env_file: [.env]
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
+
+  stt:
+    image: callisto-stt:latest
+    container_name: callisto-stt-worker
+    command: ["python3", "/app/stt_worker.py"]
+    env_file: [.env]
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ./data:/data
+      - ./models:/models
+    depends_on:
+      - recorder
+    restart: unless-stopped
+
+  chzzkchat:
+    image: callisto-stt:latest
+    container_name: chzzk-chat
+    command: ["python3", "/app/chzzkchat_service.py"]
+    env_file: [.env]
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ./data:/data
+    depends_on:
+      - recorder
+    restart: unless-stopped
